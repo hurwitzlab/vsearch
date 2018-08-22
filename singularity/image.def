@@ -1,0 +1,21 @@
+BootStrap: docker
+From: ubuntu:latest
+
+%runscript
+    exec vsearch
+
+%post
+    apt-get update
+    apt-get install -y locales wget
+    locale-gen en_US.UTF-8
+
+    mkdir -p /app
+    cd /app
+
+    wget https://github.com/torognes/vsearch/releases/download/v2.8.2/vsearch-2.8.2-linux-x86_64.tar.gz
+    tar xvf vsearch-2.8.2-linux-x86_64.tar.gz
+    mv vsearch-2.8.2-linux-x86_64/bin/vsearch /usr/local/bin
+
+    mkdir /home1
+    mkdir /scratch
+    mkdir /work
