@@ -1,0 +1,252 @@
+{
+    "name": "vsearch",
+    "version": "2.8.2",
+    "shortDescription": "Alternative to USEARCH.",
+    "longDescription": "VSEARCH is an open source and free of charge multithreaded 64-bit tool for processing and preparing metagenomics, genomics and population genomics nucleotide sequence data. It is designed as an alternative to the widely used USEARCH tool (Edgar, 2010) for which the source code is not publicly available, algorithm details are only rudimentarily described, and only a memory-confined 32-bit version is freely available for academic use.",
+    "available": true,
+    "checkpointable": false,
+    "defaultMemoryPerNode": 192,
+    "defaultProcessorsPerNode": 48,
+    "defaultMaxRunTime": "12:00:00",
+    "defaultNodeCount": 1,
+    "defaultQueue": "normal",
+    "deploymentPath": "kyclark/applications/vsearch-2.8.2/stampede",
+    "deploymentSystem": "data.iplantcollaborative.org",
+    "executionSystem": "tacc-stampede2-kyclark",
+    "executionType": "HPC",
+    "helpURI": "https://www.ncbi.nlm.nih.gov/pubmed/27781170",
+    "label": "vsearch",
+    "parallelism": "serial",
+    "templatePath": "template.sh",
+    "testPath": "test.sh",
+    "modules": [
+        "tacc-singularity"
+    ],
+    "tags": [
+        "imicrobe",
+        "vsearch",
+        "usearch"
+    ],
+    "ontology": [
+        "http://sswapmeet.sswap.info/agave/apps/Application"
+    ],
+    "inputs": [
+        {
+            "id": "INPUT",
+            "value": {
+                "default": "",
+                "order": 1,
+                "validator": "",
+                "required": true,
+                "visible": true,
+                "enquote": false
+            },
+            "semantics": {
+                "ontology": [
+                    "http://sswapmeet.sswap.info/mime/application/X-bam"
+                ],
+                "minCardinality": 1,
+                "maxCardinality": -1,
+                "fileTypes": [
+                    "raw-0"
+                ]
+            },
+            "details": {
+                "description": "",
+                "label": "Input (file or directory)",
+                "argument": "-i",
+                "repeatArgument": true,
+                "showArgument": true
+            }
+        },
+        {
+            "id": "CENTROIDS",
+            "value": {
+                "default": "",
+                "order": 2,
+                "validator": "",
+                "required": false,
+                "visible": true,
+                "enquote": false
+            },
+            "semantics": {
+                "ontology": [
+                    "http://sswapmeet.sswap.info/mime/application/X-bam"
+                ],
+                "minCardinality": 0,
+                "maxCardinality": -1,
+                "fileTypes": [
+                    "raw-0"
+                ]
+            },
+            "details": {
+                "description": "",
+                "label": "Centroids",
+                "argument": "--centroids",
+                "repeatArgument": false,
+                "showArgument": true
+            }
+        },
+        {
+            "id": "DB",
+            "value": {
+                "default": "",
+                "order": 3,
+                "validator": "",
+                "required": false,
+                "visible": true,
+                "enquote": false
+            },
+            "semantics": {
+                "ontology": [
+                    "http://sswapmeet.sswap.info/mime/application/X-bam"
+                ],
+                "minCardinality": 0,
+                "maxCardinality": -1,
+                "fileTypes": [
+                    "raw-0"
+                ]
+            },
+            "details": {
+                "description": "",
+                "label": "Database",
+                "argument": "--db",
+                "repeatArgument": false,
+                "showArgument": true
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "id": "ACTION",
+            "value": {
+                "default": "allpairs_global",
+                "type": "enumeration",
+                "order": 1,
+                "required": true,
+                "visible": true,
+                "enquote": false,
+                "enumValues": [
+                    {
+                        "allpairs_global": "allpairs_global"
+                    },
+                    {
+                        "cluster_fast": "cluster_fast"
+                    },
+                    {
+                        "cluster_size": "cluster_size"
+                    },
+                    {
+                        "cluster_smallmem": "cluster_smallmem"
+                    },
+                    {
+                        "derep_fulllength": "derep_fulllength"
+                    },
+                    {
+                        "derep_prefix": "derep_prefix"
+                    },
+                    {
+                        "fastq_chars": "fastq_chars"
+                    },
+                    {
+                        "fastq_convert": "fastq_convert"
+                    },
+                    {
+                        "fastq_eestats": "fastq_eestats"
+                    },
+                    {
+                        "fastq_eestats2": "fastq_eestats2"
+                    },
+                    {
+                        "fastq_mergepairs": "fastq_mergepairs"
+                    },
+                    {
+                        "fastq_stats": "fastq_stats"
+                    },
+                    {
+                        "fastx_filter": "fastx_filter"
+                    },
+                    {
+                        "fastx_mask": "fastx_mask"
+                    },
+                    {
+                        "fastx_revcomp": "fastx_revcomp"
+                    },
+                    {
+                        "fastx_subsample": "fastx_subsample"
+                    },
+                    {
+                        "rereplicate": "rereplicate"
+                    },
+                    {
+                        "search_exact": "search_exact"
+                    },
+                    {
+                        "shuffle": "shuffle"
+                    },
+                    {
+                        "sortbylength": "sortbylength"
+                    },
+                    {
+                        "sortbysize": "sortbysize"
+                    },
+                    {
+                        "uchime_denovo": "uchime_denovo"
+                    },
+                    {
+                        "uchime_ref": "uchime_ref"
+                    },
+                    {
+                        "usearch_global": "usearch_global"
+                    }
+                ]
+            },
+            "details": {
+                "description": "",
+                "label": "Action",
+                "argument": "-a",
+                "repeatArgument": false,
+                "showArgument": true
+            }
+        },
+        {
+            "id": "ID",
+            "value": {
+                "default": "",
+                "type": "string",
+                "order": 2,
+                "required": true,
+                "visible": true,
+                "enquote": false,
+                "validator": ""
+            },
+            "details": {
+                "description": "",
+                "label": "ID",
+                "argument": "--id",
+                "repeatArgument": false,
+                "showArgument": true
+            }
+        },
+        {
+            "id": "FASTQ_ASCII",
+            "value": {
+                "default": "",
+                "type": "string",
+                "order": 3,
+                "required": true,
+                "visible": true,
+                "enquote": false,
+                "validator": ""
+            },
+            "details": {
+                "description": "",
+                "label": "FASTQ ASCII",
+                "argument": "--fastq_ascii",
+                "repeatArgument": false,
+                "showArgument": true
+            }
+        }
+    ],
+    "outputs": []
+}
