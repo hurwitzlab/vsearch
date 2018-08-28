@@ -32,7 +32,7 @@
     ],
     "inputs": [
         {
-            "id": "INPUT",
+            "id": "QUERY",
             "value": {
                 "default": "",
                 "order": 1,
@@ -54,7 +54,7 @@
             "details": {
                 "description": "",
                 "label": "Input (file or directory)",
-                "argument": "-i",
+                "argument": "-q ",
                 "repeatArgument": true,
                 "showArgument": true
             }
@@ -82,7 +82,7 @@
             "details": {
                 "description": "",
                 "label": "Centroids",
-                "argument": "--centroids",
+                "argument": "--centroids ",
                 "repeatArgument": false,
                 "showArgument": true
             }
@@ -110,7 +110,7 @@
             "details": {
                 "description": "",
                 "label": "Database",
-                "argument": "--db",
+                "argument": "--db ",
                 "repeatArgument": false,
                 "showArgument": true
             }
@@ -118,7 +118,7 @@
     ],
     "parameters": [
         {
-            "id": "ACTION",
+            "id": "COMMAND",
             "value": {
                 "default": "allpairs_global",
                 "type": "enumeration",
@@ -204,7 +204,7 @@
             "details": {
                 "description": "",
                 "label": "Action",
-                "argument": "-a",
+                "argument": "--command ",
                 "repeatArgument": false,
                 "showArgument": true
             }
@@ -223,7 +223,7 @@
             "details": {
                 "description": "",
                 "label": "ID",
-                "argument": "--id",
+                "argument": "--id ",
                 "repeatArgument": false,
                 "showArgument": true
             }
@@ -242,7 +242,7 @@
             "details": {
                 "description": "",
                 "label": "FASTQ ASCII",
-                "argument": "--fastq_ascii",
+                "argument": "--fastq_ascii ",
                 "repeatArgument": false,
                 "showArgument": true
             }

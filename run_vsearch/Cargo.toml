@@ -1,0 +1,8 @@
+[package]
+name = "run_vsearch"
+version = "0.1.0"
+authors = ["Ken Youens-Clark <kyclark@gmail.com>"]
+
+[dependencies]
+clap = "~2.32"
+walkdir = "2"
