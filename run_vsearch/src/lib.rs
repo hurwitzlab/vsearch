@@ -2,9 +2,9 @@ extern crate clap;
 
 use clap::{App, Arg};
 use std::error::Error;
-//use std::process::{Command, Stdio};
+use std::process::{Command, Stdio};
 use std::{
-    env, fs::{self, DirBuilder, File}, io::Write, path::{Path, PathBuf},
+    env, fs::{self, DirBuilder}, io::Write, path::{Path, PathBuf},
 };
 
 // --------------------------------------------------
@@ -17,6 +17,7 @@ pub struct Config {
     id_value: Option<f64>,
     fastq_ascii: Option<u32>,
     bin_dir: Option<String>,
+    num_threads: u32,
     out_dir: PathBuf,
 }
 
@@ -95,6 +96,14 @@ pub fn get_args() -> MyResult<Config> {
                 .help("Location of binaries")
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("num_threads")
+                .short("t")
+                .long("num_threads")
+                .value_name("INT")
+                .default_value("12")
+                .help("Number of threads"),
+        )
         .get_matches();
 
     let centroids = match matches.value_of("centroids") {
@@ -111,7 +120,7 @@ pub fn get_args() -> MyResult<Config> {
         Some(x) => PathBuf::from(x),
         _ => {
             let cwd = env::current_dir()?;
-            cwd.join(PathBuf::from("mash-out"))
+            cwd.join(PathBuf::from("vsearch-out"))
         }
     };
 
@@ -136,6 +145,14 @@ pub fn get_args() -> MyResult<Config> {
         _ => None,
     };
 
+    let num_threads: u32 = match matches.value_of("num_threads") {
+        Some(x) => match x.trim().parse() {
+            Ok(n) if n > 0 && n < 64 => n,
+            _ => 0,
+        },
+        _ => 0,
+    };
+
     let config = Config {
         query: matches.values_of_lossy("query").unwrap(),
         command: matches.value_of("command").unwrap().to_string(),
@@ -145,6 +162,7 @@ pub fn get_args() -> MyResult<Config> {
         out_dir: out_dir,
         id_value: id_value,
         fastq_ascii: fastq_ascii,
+        num_threads: num_threads,
     };
 
     Ok(config)
@@ -153,16 +171,22 @@ pub fn get_args() -> MyResult<Config> {
 // --------------------------------------------------
 pub fn run(config: Config) -> MyResult<()> {
     println!("{:?}", config);
+
+    let out_dir = &config.out_dir;
+    if !out_dir.is_dir() {
+        DirBuilder::new().recursive(true).create(&out_dir)?;
+    }
+
+    if let Some(id_value) = &config.id_value {
+        if id_value < &0.0 || id_value > &1.0 {
+            let msg = format!("Bad --id ({:?}), must be between 0 and 1", id_value);
+            return Err(From::from(msg));
+        }
+    }
+
     let files = find_files(&config.query)?;
-    println!(
-        "Will process {} file{}",
-        files.len(),
-        if files.len() == 1 { "" } else { "s" }
-    );
-
-    let command = validate_command(&config.command)?;
-
-    println!("Will do {}", command);
+    let jobs = make_jobs(&config, &files)?;
+    run_jobs(&jobs, "Running VSEARCH", 12);
 
     Ok(())
 }
@@ -186,7 +210,8 @@ fn find_files(paths: &Vec<String>) -> Result<Vec<String>, Box<Error>> {
     }
 
     if files.len() == 0 {
-        return Err(From::from("No input files"));
+        let msg = format!("No input files can be found in {}", paths.join(", "));
+        return Err(From::from(msg));
     }
 
     Ok(files)
@@ -234,6 +259,103 @@ fn validate_command(command: &String) -> Result<&String, Box<Error>> {
                     .join("\n")
             );
             return Err(From::from(msg));
+        }
+    }
+}
+
+// --------------------------------------------------
+fn run_jobs(jobs: &Vec<String>, msg: &str, num_concurrent: u32) -> MyResult<()> {
+    let num_jobs = jobs.len();
+
+    if num_jobs > 0 {
+        println!(
+            "{} (# {} job{} @ {})",
+            msg,
+            num_jobs,
+            if num_jobs == 1 { "" } else { "s" },
+            num_concurrent
+        );
+
+        let mut process = Command::new("parallel")
+            .arg("-j")
+            .arg(num_concurrent.to_string())
+            .arg("--halt")
+            .arg("soon,fail=1")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .spawn()?;
+
+        {
+            let stdin = process.stdin.as_mut().expect("Failed to open stdin");
+            stdin
+                .write_all(jobs.join("\n").as_bytes())
+                .expect("Failed to write to stdin");
+        }
+
+        let result = process.wait()?;
+        if !result.success() {
+            return Err(From::from("Failed to run jobs in parallel"));
+        }
+    }
+
+    Ok(())
+}
+
+// --------------------------------------------------
+fn make_jobs(config: &Config, files: &Vec<String>) -> Result<Vec<String>, Box<Error>> {
+    let command = validate_command(&config.command)?;
+
+    let needs_id_value = vec![
+        "allpairs_global",
+        "cluster_fast",
+        "cluster_size",
+        "cluster_smallmem",
+        "usearch_global",
+    ];
+
+    if needs_id_value.contains(&command.as_str()) && config.id_value.is_none() {
+        let msg = format!("--{} requires --id value (0 < id < 1)", command);
+        return Err(From::from(msg));
+    }
+
+    let vsearch = "vsearch";
+    let vsearch_path = match &config.bin_dir {
+        Some(path) => Path::new(&path).join(vsearch),
+        _ => PathBuf::from(vsearch),
+    };
+
+    let id_value = match config.id_value {
+        Some(x) => x,
+        _ => 0.0,
+    };
+
+    let mut jobs = vec![];
+    for file in files.iter() {
+        let basename = basename(&file)?;
+        let out_file = config.out_dir.join(basename);
+        jobs.push(format!(
+            "{} --{} {} --id {:?} --alnout {} --threads {}",
+            vsearch_path.to_string_lossy(),
+            command,
+            file,
+            id_value,
+            out_file.to_string_lossy(),
+            config.num_threads,
+        ));
+    }
+    println!("{:?}", jobs);
+
+    Ok(jobs)
+}
+
+// --------------------------------------------------
+fn basename(fname: &String) -> MyResult<String> {
+    let buf = PathBuf::from(fname);
+    match buf.file_name() {
+        Some(x) => Ok(x.to_string_lossy().to_string()),
+        _ => {
+            let msg = format!("Cannot get basename from file \"{}\"", fname);
+            Err(From::from(msg))
         }
     }
 }
